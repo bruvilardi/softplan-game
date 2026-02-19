@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { PuzzleBoard } from './components/PuzzleBoard';
 import { Leaderboard } from './components/Leaderboard';
 import { WinModal } from './components/WinModal';
-import { GameState, Score } from './types';
 import { generatePuzzleImage } from './utils/gameLogic';
 
 export default function App() {
@@ -12,8 +11,9 @@ export default function App() {
 
   useEffect(() => {
     // Generate the specific Softplan themed image on mount
-    const img = generatePuzzleImage("Juntos, pela transformação digital no Setor Público");
-    setPuzzleImage(img);
+    // Now async to support logo loading
+    generatePuzzleImage("Juntos, pela transformação digital no Setor Público")
+      .then(setPuzzleImage);
   }, []);
 
   const handleGameWin = (time: number, moves: number) => {
@@ -76,7 +76,7 @@ export default function App() {
         </div>
 
         {puzzleImage ? (
-          <div className="w-full max-w-4xl z-0">
+          <div className="w-full max-w-4xl z-0 animate-fade-in">
             {currentView === 'game' ? (
               <PuzzleBoard 
                 imageSrc={puzzleImage} 
@@ -87,9 +87,9 @@ export default function App() {
             )}
           </div>
         ) : (
-          <div className="flex items-center space-x-3 text-softplan-blue">
-            <div className="animate-spin h-6 w-6 border-2 border-softplan-blue border-t-transparent rounded-full"></div>
-            <span className="font-semibold tracking-wide">Carregando recursos...</span>
+          <div className="flex flex-col items-center justify-center space-y-4 text-softplan-blue min-h-[400px]">
+            <div className="animate-spin h-10 w-10 border-4 border-softplan-blue border-t-transparent rounded-full"></div>
+            <span className="font-semibold tracking-wide text-lg">Preparando desafio...</span>
           </div>
         )}
       </main>

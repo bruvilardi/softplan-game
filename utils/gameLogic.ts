@@ -68,82 +68,122 @@ const getValidMoves = (emptyPos: number): number[] => {
 
 /**
  * Generates the Softplan themed puzzle image on a canvas.
+ * Now async to handle image loading.
  */
-export const generatePuzzleImage = (text: string): string => {
-  const canvas = document.createElement('canvas');
-  const size = 600; // High resolution
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext('2d');
+export const generatePuzzleImage = (text: string): Promise<string> => {
+  return new Promise((resolve) => {
+    const canvas = document.createElement('canvas');
+    const size = 600; // High resolution
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
 
-  if (!ctx) return '';
-
-  // Background Gradient (Softplan Blue)
-  const gradient = ctx.createLinearGradient(0, 0, size, size);
-  gradient.addColorStop(0, '#5959F6'); // Updated to #5959F6
-  gradient.addColorStop(1, '#002a5c');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, size, size);
-
-  // Abstract Geometric Shapes (Tech Feel)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-  ctx.beginPath();
-  ctx.arc(size, 0, 300, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(0, 181, 226, 0.1)'; // Softplan Light Blue
-  ctx.beginPath();
-  ctx.moveTo(0, size);
-  ctx.lineTo(size/2, size/2);
-  ctx.lineTo(size, size);
-  ctx.fill();
-
-  // Grid Lines (Subtle)
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-  ctx.lineWidth = 2;
-  const step = size / GRID_SIZE;
-  for (let i = 1; i < GRID_SIZE; i++) {
-      ctx.beginPath();
-      ctx.moveTo(i * step, 0);
-      ctx.lineTo(i * step, size);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(0, i * step);
-      ctx.lineTo(size, i * step);
-      ctx.stroke();
-  }
-
-  // Text Wrapping logic
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 48px Montserrat, sans-serif'; // Updated to Montserrat
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  
-  const words = text.split(' ');
-  let line = '';
-  let y = size / 2 - 40; // Start slightly higher
-  const lineHeight = 60;
-  const maxWidth = size - 80;
-
-  for (let n = 0; n < words.length; n++) {
-    const testLine = line + words[n] + ' ';
-    const metrics = ctx.measureText(testLine);
-    const testWidth = metrics.width;
-    if (testWidth > maxWidth && n > 0) {
-      ctx.fillText(line, size / 2, y);
-      line = words[n] + ' ';
-      y += lineHeight;
-    } else {
-      line = testLine;
+    if (!ctx) {
+      resolve('');
+      return;
     }
-  }
-  ctx.fillText(line, size / 2, y);
 
-  // Logo Placeholder (Text fallback for canvas)
-  ctx.font = '24px Montserrat, sans-serif'; // Updated to Montserrat
-  ctx.fillStyle = '#00b5e2';
-  ctx.fillText("SOFTPLAN", size / 2, size - 40);
+    // Background Gradient (Softplan Blue)
+    const gradient = ctx.createLinearGradient(0, 0, size, size);
+    gradient.addColorStop(0, '#5959F6'); // Updated to #5959F6
+    gradient.addColorStop(1, '#002a5c');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, size, size);
 
-  return canvas.toDataURL('image/png');
+    // Abstract Geometric Shapes (Tech Feel)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.beginPath();
+    ctx.arc(size, 0, 300, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'rgba(0, 181, 226, 0.1)'; // Softplan Light Blue
+    ctx.beginPath();
+    ctx.moveTo(0, size);
+    ctx.lineTo(size/2, size/2);
+    ctx.lineTo(size, size);
+    ctx.fill();
+
+    // Grid Lines (Subtle)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.lineWidth = 2;
+    const step = size / GRID_SIZE;
+    for (let i = 1; i < GRID_SIZE; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * step, 0);
+        ctx.lineTo(i * step, size);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(0, i * step);
+        ctx.lineTo(size, i * step);
+        ctx.stroke();
+    }
+
+    // Text Wrapping logic - Updated to Sora Font
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 48px Sora, sans-serif'; // Updated to Sora
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    const words = text.split(' ');
+    let line = '';
+    // Moved y slightly up to make room for logo
+    let y = size / 2 - 60; 
+    const lineHeight = 60;
+    const maxWidth = size - 80;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, size / 2, y);
+        line = words[n] + ' ';
+        y += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+    ctx.fillText(line, size / 2, y);
+
+    // Logo Handling
+    const logoUrl = "https://www.softplan.com.br/wp-content/uploads/2025/11/Logo-1.png.webp";
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // Important for canvas manipulation
+    
+    img.onload = () => {
+      try {
+        const logoWidth = 200;
+        const scale = logoWidth / img.width;
+        const logoHeight = img.height * scale;
+        
+        ctx.save();
+        // Make logo white to fit on blue background
+        ctx.filter = 'brightness(0) invert(1)'; 
+        ctx.drawImage(img, (size - logoWidth) / 2, size - logoHeight - 40, logoWidth, logoHeight);
+        ctx.restore();
+        
+        resolve(canvas.toDataURL('image/png'));
+      } catch (e) {
+        // Fallback if CORS fails after load or other error
+        console.warn("Could not draw logo to canvas", e);
+        drawFallbackLogo(ctx, size);
+        resolve(canvas.toDataURL('image/png'));
+      }
+    };
+
+    img.onerror = () => {
+      console.warn("Failed to load Softplan logo");
+      drawFallbackLogo(ctx, size);
+      resolve(canvas.toDataURL('image/png'));
+    };
+
+    img.src = logoUrl;
+  });
+};
+
+const drawFallbackLogo = (ctx: CanvasRenderingContext2D, size: number) => {
+    ctx.font = '24px Sora, sans-serif';
+    ctx.fillStyle = '#00b5e2';
+    ctx.fillText("SOFTPLAN", size / 2, size - 40);
 };
