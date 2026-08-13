@@ -1,5 +1,6 @@
 {
-  "name": "Softplan Puzzle Challenge",
-  "description": "A digital transformation themed sliding puzzle game featuring a leaderboard and AI-generated insights.",
-  "requestFramePermissions": []
+  "name": "",
+  "description": "",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
